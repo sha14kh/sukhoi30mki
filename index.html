@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Su-30 MKI | Sukhoi Flanker-H | Indian Air Force</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9a227;
+    --gold-light: #f0c84a;
+    --gold-dim: #7a6118;
+    --blue-deep: #020b1a;
+    --blue-mid: #041428;
+    --blue-glass: rgba(4, 30, 60, 0.45);
+    --cyan: #00d4ff;
+    --cyan-dim: rgba(0,212,255,0.15);
+    --white: #e8f4ff;
+    --glass-border: rgba(201, 162, 39, 0.3);
+    --glass-bg: rgba(255,255,255,0.04);
+    --glass-bg-strong: rgba(0,180,255,0.07);
+    --red: #ff3c3c;
+    --green: #00ff88;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--blue-deep);
+    color: var(--white);
+    font-family: 'Rajdhani', sans-serif;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  /* Background layers: stars, scanlines and a faint grid */
+  .starfield {
+    position: fixed; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse at 20% 30%, #040f2a 0%, #020710 60%, #010409 100%);
+    overflow: hidden;
+  }
+  .starfield::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.8) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 50% 10%, rgba(255,255,255,0.9) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,0.7) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 70%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(2px 2px at 15% 80%, rgba(200,230,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 92% 15%, rgba(255,255,255,0.8) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 45% 90%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 50%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 45%, rgba(255,255,255,0.5) 0%, transparent 100%);
+  }
+
+  .scanlines {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+  }
+  .grid-overlay {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .content { position: relative; z-index: 10; width: 100%; }
+
+  /* Navigation */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    background: rgba(2, 8, 20, 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--glass-border);
+    width: 100%;
+  }
+  .nav-logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 1rem; font-weight: 800;
+    color: var(--gold);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+  }
+  .nav-logo span { color: var(--cyan); }
+  .nav-links { display: flex; gap: 24px; list-style: none; align-items: center; }
+  .nav-links a {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.8rem; font-weight: 600;
+    color: rgba(232,244,255,0.7);
+    text-decoration: none; letter-spacing: 0.15em;
+    text-transform: uppercase;
+    transition: color 0.3s;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: ''; position: absolute; bottom: -4px; left: 0;
+    width: 0; height: 1px; background: var(--gold);
+    transition: width 0.3s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+  .nav-links a:hover::after { width: 100%; }
+
+  /* Hand gesture toggle in the nav */
+  .gesture-btn {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem; color: var(--gold);
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    padding: 5px 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .gesture-btn:hover {
+    color: var(--gold-light);
+    border-color: var(--gold);
+    background: rgba(201, 162, 39, 0.1);
+    box-shadow: 0 0 10px rgba(201, 162, 39, 0.3);
+  }
+  .gesture-btn.active {
+    color: var(--green);
+    border-color: var(--green);
+    background: rgba(0, 255, 136, 0.1);
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+  }
+
+  .nav-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem; color: var(--cyan);
+    border: 1px solid var(--cyan); padding: 3px 10px;
+    letter-spacing: 0.15em;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 992px) {
+    .nav-links { display: none; }
+    .nav-badge { font-size: 0.55rem; padding: 3px 8px; }
+    nav { padding: 12px 16px; }
+  }
+
+  /* Hero */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 100px 20px 60px;
+    position: relative; overflow: hidden;
+    width: 100%;
+  }
+  .hero-bg-glow {
+    position: absolute; top: 50%; left: 50%;
+    width: min(900px, 100vw); height: min(900px, 100vw);
+    transform: translate(-50%, -50%);
+    background: radial-gradient(ellipse, rgba(0,100,200,0.15) 0%, transparent 70%);
+    pointer-events: none;
+    animation: pulse-glow 4s ease-in-out infinite;
+  }
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+  }
+  .hero-eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(0.55rem, 2vw, 0.75rem); letter-spacing: 0.4em;
+    color: var(--cyan); text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 12px;
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .hero-eyebrow::before, .hero-eyebrow::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan));
+    max-width: 60px; min-width: 20px;
+  }
+  .hero-eyebrow::after { background: linear-gradient(90deg, var(--cyan), transparent); }
+
+  .holo-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 16px;
+    background: linear-gradient(135deg, rgba(0,212,255,0.08) 0%, rgba(201,162,39,0.08) 100%);
+    border: 1px solid var(--glass-border);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(0.5rem, 2.5vw, 0.65rem); letter-spacing: 0.2em; color: var(--gold);
+    text-transform: uppercase; margin-bottom: 24px;
+    max-width: 100%; text-align: center;
+  }
+  .holo-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 8px var(--green);
+    animation: pulse-dot 1.5s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { box-shadow: 0 0 4px var(--green); }
+    50% { box-shadow: 0 0 12px var(--green), 0 0 20px var(--green); }
+  }
+
+  .hero-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2.4rem, 10vw, 7rem);
+    font-weight: 900;
+    line-height: 0.9;
+    text-align: center;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    width: 100%;
+  }
+  .hero-title .line1 {
+    display: block;
+    background: linear-gradient(135deg, #fff 0%, var(--gold-light) 40%, var(--gold) 60%, #fff 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 30px rgba(201,162,39,0.4));
+  }
+  .hero-title .line2 {
+    display: block; font-size: 0.42em;
+    color: var(--cyan);
+    letter-spacing: 0.35em;
+    -webkit-text-fill-color: var(--cyan);
+    filter: drop-shadow(0 0 20px rgba(0,212,255,0.6));
+    margin-top: 8px;
+  }
+  .hero-subtitle {
+    font-size: clamp(0.85rem, 3vw, 1.1rem); font-weight: 300;
+    color: rgba(232,244,255,0.6);
+    letter-spacing: 0.1em;
+    text-align: center; margin-bottom: 36px;
+    max-width: min(600px, 90vw);
+    line-height: 1.6;
+    padding: 0 10px;
+  }
+
+  /* Hero jet image */
+  .jet-hero-container {
+    position: relative; width: 100%; max-width: min(900px, 95vw);
+    margin: 10px auto;
+  }
+  .jet-hero-img {
+    width: 100%; height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 0 40px rgba(0,150,255,0.4)) drop-shadow(0 20px 60px rgba(0,0,0,0.8));
+    animation: jet-float 6s ease-in-out infinite;
+    display: block;
+    max-height: 50vh;
+  }
+  @keyframes jet-float {
+    0%, 100% { transform: translateY(0px) rotate(-2deg); }
+    50% { transform: translateY(-14px) rotate(-1deg); }
+  }
+
+  /* HUD readouts beside the jet (hidden on small screens) */
+  .jet-hud-left, .jet-hud-right {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .jet-hud-left { left: 0; }
+  .jet-hud-right { right: 0; align-items: flex-end; }
+  .hud-item {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem; color: var(--cyan);
+    letter-spacing: 0.08em; line-height: 1.8;
+    border-left: 2px solid var(--cyan);
+    padding-left: 8px;
+    animation: hud-flicker 3s ease-in-out infinite;
+  }
+  .jet-hud-right .hud-item {
+    border-left: none; border-right: 2px solid var(--gold);
+    padding-left: 0; padding-right: 8px; color: var(--gold);
+    text-align: right;
+  }
+  @keyframes hud-flicker {
+    0%, 100% { opacity: 1; } 92% { opacity: 1; } 93% { opacity: 0.3; } 94% { opacity: 1; }
+  }
+  @media (max-width: 600px) {
+    .jet-hud-left, .jet-hud-right { display: none; }
+  }
+
+  /* Quick stats under the hero */
+  .stats-bar {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px; margin: 40px 0 0;
+    width: 100%; max-width: min(900px, 95vw);
+    border: 1px solid var(--glass-border);
+    background: var(--glass-border);
+    border-radius: 2px; overflow: hidden;
+  }
+  .stat-item {
+    background: rgba(2, 14, 35, 0.8);
+    backdrop-filter: blur(20px);
+    padding: 18px 12px;
+    text-align: center;
+    transition: background 0.3s;
+  }
+  .stat-item:hover { background: rgba(0,100,200,0.15); }
+  .stat-value {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.1rem, 4vw, 1.8rem); font-weight: 800;
+    color: var(--gold); display: block; line-height: 1;
+  }
+  .stat-unit {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(0.5rem, 1.5vw, 0.65rem); color: var(--cyan);
+    display: block; margin-top: 2px;
+  }
+  .stat-label {
+    font-size: clamp(0.55rem, 1.5vw, 0.7rem); color: rgba(232,244,255,0.5);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    display: block; margin-top: 6px;
+  }
+  @media (max-width: 480px) {
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* Scroll hint at the bottom of the hero */
+  .scroll-indicator {
+    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    animation: bounce 2s ease-in-out infinite;
+  }
+  .scroll-indicator span {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.55rem; color: rgba(0,212,255,0.5); letter-spacing: 0.3em;
+  }
+  .scroll-arrow { width: 1px; height: 30px; background: linear-gradient(180deg, var(--cyan), transparent); }
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(6px); }
+  }
+
+  /* Shared section styles */
+  section { padding: 70px 20px; position: relative; width: 100%; }
+  @media (min-width: 769px) { section { padding: 100px 60px; } }
+
+  .section-header {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 50px; flex-wrap: wrap;
+  }
+  .section-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem; color: var(--gold); letter-spacing: 0.3em; white-space: nowrap;
+  }
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.2rem, 4vw, 2.5rem);
+    font-weight: 700; letter-spacing: 0.05em; color: var(--white);
+  }
+  .section-line {
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg, var(--glass-border), transparent);
+    min-width: 20px;
+  }
+
+  /* Glass cards */
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    border-radius: 4px;
+    position: relative; overflow: hidden;
+    transition: transform 0.4s ease, border-color 0.3s, box-shadow 0.4s;
+  }
+  .glass-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .glass-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(201,162,39,0.6);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 30px rgba(0,180,255,0.1);
+  }
+  .glass-card:hover::before { opacity: 1; }
+
+  .glow-divider {
+    width: 100%; height: 1px; margin: 0;
+    background: linear-gradient(90deg, transparent, var(--cyan), var(--gold), var(--cyan), transparent);
+    opacity: 0.4;
+  }
+
+  /* Specs */
+  .specs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 768px) { .specs-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 400px) { .specs-grid { grid-template-columns: 1fr; } }
+
+  .spec-card { padding: 24px 20px; }
+  .spec-icon { font-size: 1.8rem; margin-bottom: 12px; filter: drop-shadow(0 0 10px rgba(0,212,255,0.5)); }
+  .spec-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem; letter-spacing: 0.25em;
+    color: var(--cyan); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .spec-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(1rem, 3vw, 1.5rem); font-weight: 700; color: var(--white); line-height: 1.2;
+  }
+  .spec-detail { font-size: 0.78rem; color: rgba(232,244,255,0.45); margin-top: 4px; line-height: 1.5; }
+
+  /* Gallery */
+  .gallery-section { background: linear-gradient(180deg, transparent 0%, rgba(0,20,50,0.3) 50%, transparent 100%); }
+
+  .gallery-showcase {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .gallery-showcase .g-item {
+    position: relative; border-radius: 6px;
+    border: 1px solid rgba(201,162,39,0.2);
+    cursor: pointer; display: flex;
+    flex-direction: column;
+    background: rgba(0,5,20,0.6);
+    transition: border-color 0.3s, box-shadow 0.4s;
+    overflow: hidden;
+  }
+  .gallery-showcase .g-item:hover {
+    border-color: rgba(201,162,39,0.6);
+    box-shadow: 0 0 30px rgba(0,180,255,0.12);
+  }
+  .gallery-showcase .g-item img {
+    width: 100%; height: auto;
+    object-fit: contain; display: block;
+    transition: transform 0.5s ease, filter 0.4s;
+    filter: brightness(0.88) saturate(0.9);
+    border-radius: 5px 5px 0 0;
+  }
+  .gallery-showcase .g-item:hover img {
+    transform: scale(1.03);
+    filter: brightness(1.05) saturate(1.25);
+  }
+  .g-item.g-feature { grid-column: 1 / 3; }
+  .g-item.g-wide { grid-column: 1 / 3; }
+
+  @media (max-width: 700px) {
+    .gallery-showcase { grid-template-columns: 1fr 1fr; }
+    .g-item.g-feature { grid-column: 1 / 3; }
+    .g-item.g-wide { grid-column: 1 / 3; }
+  }
+  @media (max-width: 420px) {
+    .gallery-showcase { grid-template-columns: 1fr; }
+    .g-item.g-feature, .g-item.g-wide { grid-column: 1; }
+  }
+
+  .g-overlay {
+    display: flex; flex-direction: column;
+    padding: 10px 14px 12px;
+    background: rgba(0,5,20,0.75);
+    border-top: 1px solid rgba(201,162,39,0.15);
+    transition: background 0.3s;
+  }
+  .g-item:hover .g-overlay { background: rgba(0,15,40,0.9); }
+  .g-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem; color: var(--gold); letter-spacing: 0.2em;
+    margin-bottom: 2px;
+  }
+  .g-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.72rem; color: var(--white); font-weight: 600;
+  }
+  .g-corner {
+    position: absolute; top: 10px; left: 10px;
+    width: 16px; height: 16px;
+    border-top: 1px solid var(--gold);
+    border-left: 1px solid var(--gold);
+    opacity: 0.7; pointer-events: none;
+  }
+  .g-corner-r {
+    position: absolute; top: 10px; right: 10px;
+    width: 16px; height: 16px;
+    border-top: 1px solid var(--cyan);
+    border-right: 1px solid var(--cyan);
+    opacity: 0.7; pointer-events: none;
+  }
+  .g-badge {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.52rem; color: var(--cyan);
+    border: 1px solid rgba(0,212,255,0.4);
+    padding: 2px 8px; letter-spacing: 0.2em;
+    background: rgba(0,5,20,0.75);
+    white-space: nowrap; pointer-events: none;
+  }
+
+  /* Capabilities */
+  .capabilities-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 600px) { .capabilities-grid { grid-template-columns: 1fr; } }
+
+  .cap-card { padding: 30px 26px; }
+  .cap-number {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.5rem; font-weight: 900;
+    color: var(--glass-border); line-height: 1; margin-bottom: 12px;
+    -webkit-text-stroke: 1px var(--gold-dim);
+  }
+  .cap-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.9rem; font-weight: 700;
+    color: var(--gold); margin-bottom: 10px; letter-spacing: 0.1em;
+  }
+  .cap-desc { font-size: 0.9rem; color: rgba(232,244,255,0.6); line-height: 1.7; }
+  .cap-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+  .cap-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem; color: var(--cyan);
+    border: 1px solid rgba(0,212,255,0.3); padding: 3px 8px; letter-spacing: 0.12em;
+  }
+
+  /* Animated counters */
+  .counter-section {
+    background: linear-gradient(135deg, rgba(0,30,70,0.5) 0%, rgba(0,10,30,0.8) 100%);
+    border-top: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .counter-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+  }
+  @media (max-width: 768px) { .counter-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 480px) { .counter-grid { grid-template-columns: repeat(2, 1fr); } }
+  .counter-item {
+    padding: 36px 16px; text-align: center;
+    border-right: 1px solid rgba(201,162,39,0.1);
+    border-bottom: 1px solid rgba(201,162,39,0.08);
+  }
+  .counter-item:last-child { border-right: none; }
+  .counter-num {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 900;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; line-height: 1; display: block;
+  }
+  .counter-suffix {
+    font-family: 'Orbitron', monospace; font-size: 1.1rem;
+    color: var(--cyan); -webkit-text-fill-color: var(--cyan);
+  }
+  .counter-label {
+    font-size: clamp(0.6rem, 2vw, 0.7rem); letter-spacing: 0.15em;
+    color: rgba(232,244,255,0.4); text-transform: uppercase; margin-top: 8px;
+  }
+
+  /* Avionics */
+  .avionics-section { background: linear-gradient(135deg, rgba(0,20,50,0.4) 0%, transparent 100%); }
+  .avionics-layout {
+    display: grid; grid-template-columns: 1fr 1.2fr;
+    gap: 50px; align-items: center;
+  }
+  @media (max-width: 700px) { .avionics-layout { grid-template-columns: 1fr; } }
+
+  .avionics-jet {
+    width: 100%; height: auto; object-fit: contain;
+    filter: drop-shadow(0 0 30px rgba(0,150,255,0.3));
+    animation: jet-float-slow 8s ease-in-out infinite;
+    max-height: 340px;
+  }
+  @keyframes jet-float-slow {
+    0%, 100% { transform: translateY(0) rotate(3deg); }
+    50% { transform: translateY(-12px) rotate(4deg); }
+  }
+  .avionics-list { list-style: none; display: flex; flex-direction: column; gap: 0; }
+  .avionics-item {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 0; border-bottom: 1px solid rgba(201,162,39,0.1);
+    transition: all 0.3s;
+  }
+  .avionics-item:hover { padding-left: 8px; }
+  .avionics-item:hover .avi-name { color: var(--gold); }
+  .avi-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--cyan); flex-shrink: 0;
+    box-shadow: 0 0 8px var(--cyan);
+  }
+  .avi-content { flex: 1; min-width: 0; }
+  .avi-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem; font-weight: 600; color: var(--white);
+    letter-spacing: 0.05em; transition: color 0.3s;
+  }
+  .avi-detail { font-size: 0.75rem; color: rgba(232,244,255,0.4); font-family: 'Share Tech Mono', monospace; }
+  .avi-status {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem; padding: 3px 7px;
+    color: var(--green); border: 1px solid rgba(0,255,136,0.4);
+    letter-spacing: 0.1em; white-space: nowrap;
+  }
+
+  /* Radar widget */
+  .radar-container { width: 160px; height: 160px; position: relative; margin: 24px auto 0; }
+  .radar-circle { position: absolute; border-radius: 50%; border: 1px solid rgba(0,212,255,0.2); }
+  .radar-circle:nth-child(1) { inset: 0; }
+  .radar-circle:nth-child(2) { inset: 25%; }
+  .radar-circle:nth-child(3) { inset: 50%; }
+  .radar-sweep { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; }
+  .radar-sweep::after {
+    content: ''; position: absolute; top: 50%; left: 50%; width: 50%; height: 2px;
+    transform-origin: 0 50%;
+    background: linear-gradient(90deg, rgba(0,212,255,0.8), transparent);
+    animation: radar-spin 3s linear infinite;
+  }
+  @keyframes radar-spin { to { transform: rotate(360deg); } }
+  .radar-line-h, .radar-line-v { position: absolute; background: rgba(0,212,255,0.1); }
+  .radar-line-h { top: 50%; left: 0; right: 0; height: 1px; }
+  .radar-line-v { left: 50%; top: 0; bottom: 0; width: 1px; }
+
+  /* Progress bars */
+  .progress-list { display: flex; flex-direction: column; gap: 14px; width: 100%; margin-top: 36px; }
+  .progress-header {
+    display: flex; justify-content: space-between;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem; color: var(--cyan); margin-bottom: 6px; letter-spacing: 0.1em;
+  }
+  .progress-track {
+    height: 3px; background: rgba(255,255,255,0.05);
+    border-radius: 0; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--cyan), var(--gold));
+    animation: progress-load 2s ease-out forwards;
+    transform-origin: left;
+  }
+  @keyframes progress-load { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+  /* Weapons */
+  .weapons-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 900px) { .weapons-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .weapons-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .weapon-card {
+    padding: 22px 16px; text-align: center;
+    background: var(--glass-bg-strong);
+  }
+  .weapon-class { font-family: 'Share Tech Mono', monospace; font-size: 0.58rem; color: var(--red); letter-spacing: 0.2em; margin-bottom: 6px; }
+  .weapon-name { font-family: 'Orbitron', monospace; font-size: 0.8rem; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+  .weapon-range { font-family: 'Share Tech Mono', monospace; font-size: 0.72rem; color: var(--gold); }
+  .weapon-desc { font-size: 0.72rem; color: rgba(232,244,255,0.4); margin-top: 6px; line-height: 1.5; }
+
+  /* Cockpit */
+  .cockpit-section { display: grid; grid-template-columns: 1.2fr 1fr; gap: 50px; align-items: center; }
+  @media (max-width: 700px) { .cockpit-section { grid-template-columns: 1fr; } }
+
+  .cockpit-feature-list { margin-top: 24px; display: flex; flex-direction: column; gap: 0; }
+  .cockpit-feature {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 14px 0; border-bottom: 1px solid rgba(201,162,39,0.08);
+  }
+  .cf-icon {
+    width: 32px; height: 32px; display: flex;
+    align-items: center; justify-content: center;
+    border: 1px solid rgba(0,212,255,0.3);
+    color: var(--cyan); font-size: 0.9rem; flex-shrink: 0;
+  }
+  .cf-title { font-weight: 600; font-size: 0.9rem; color: var(--white); margin-bottom: 3px; }
+  .cf-desc { font-size: 0.75rem; color: rgba(232,244,255,0.45); line-height: 1.5; }
+  .cockpit-visual { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 36px; }
+  .timeline::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 1px;
+    background: linear-gradient(180deg, transparent, var(--cyan), var(--gold), transparent);
+  }
+  .timeline-item { position: relative; margin-bottom: 30px; padding: 24px 26px; }
+  .timeline-item::before {
+    content: ''; position: absolute; left: -42px; top: 32px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--gold); box-shadow: 0 0 12px var(--gold);
+  }
+  .timeline-year { font-family: 'Orbitron', monospace; font-size: 0.65rem; color: var(--gold); letter-spacing: 0.3em; margin-bottom: 6px; }
+  .timeline-event { font-size: 1rem; font-weight: 600; color: var(--white); margin-bottom: 6px; }
+  .timeline-detail { font-size: 0.82rem; color: rgba(232,244,255,0.5); line-height: 1.6; }
+
+  /* Corner decoration */
+  .corner-deco { position: absolute; width: 24px; height: 24px; }
+  .corner-deco.tl { top: 14px; left: 14px; border-top: 1px solid var(--gold); border-left: 1px solid var(--gold); }
+  .corner-deco.tr { top: 14px; right: 14px; border-top: 1px solid var(--gold); border-right: 1px solid var(--gold); }
+  .corner-deco.bl { bottom: 14px; left: 14px; border-bottom: 1px solid var(--gold); border-left: 1px solid var(--gold); }
+  .corner-deco.br { bottom: 14px; right: 14px; border-bottom: 1px solid var(--gold); border-right: 1px solid var(--gold); }
+
+  /* Footer */
+  footer {
+    padding: 50px 24px; text-align: center;
+    border-top: 1px solid var(--glass-border);
+    background: rgba(0,0,0,0.3);
+  }
+  .footer-logo { font-family: 'Orbitron', monospace; font-size: 1.3rem; font-weight: 900; color: var(--gold); letter-spacing: 0.3em; margin-bottom: 16px; }
+  .footer-text { font-size: 0.75rem; color: rgba(232,244,255,0.3); letter-spacing: 0.1em; line-height: 1.8; }
+  .footer-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 20px 30px; margin: 24px 0; list-style: none; }
+  .footer-links a { font-size: 0.72rem; color: rgba(232,244,255,0.4); text-decoration: none; letter-spacing: 0.15em; text-transform: uppercase; transition: color 0.3s; }
+  .footer-links a:hover { color: var(--gold); }
+
+  /* Developer credit, sits at the very bottom of the footer */
+  .dev-credit {
+    margin-top: 28px; padding-top: 20px;
+    border-top: 1px solid rgba(201,162,39,0.12);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.68rem; letter-spacing: 0.15em;
+    color: rgba(232,244,255,0.45);
+  }
+  .dev-credit a {
+    color: var(--cyan); text-decoration: none;
+    transition: color 0.3s, text-shadow 0.3s;
+  }
+  .dev-credit a:hover {
+    color: var(--gold);
+    text-shadow: 0 0 10px rgba(201,162,39,0.5);
+  }
+
+  /* Scroll reveal */
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.8s ease, transform 0.8s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* Camera elements used by gesture control stay off-screen */
+  #gesture-hud {
+    position: fixed; bottom: -9999px; right: -9999px; z-index: -1;
+    pointer-events: none; visibility: hidden; opacity: 0;
+  }
+  #gesture-video, #gesture-canvas {
+    position: fixed; top: -9999px; left: -9999px; width: 1px; height: 1px;
+    pointer-events: none; opacity: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="starfield"></div>
+<div class="grid-overlay"></div>
+<div class="scanlines"></div>
+
+<video id="gesture-video" autoplay playsinline muted></video>
+<canvas id="gesture-canvas"></canvas>
+
+<div class="content">
+
+<!-- Nav -->
+<nav>
+  <div class="nav-logo">SU-30 <span>MKI</span></div>
+  <ul class="nav-links">
+    <li><a href="#specs">Specs</a></li>
+    <li><a href="#gallery">Gallery</a></li>
+    <li><a href="#capabilities">Capabilities</a></li>
+    <li><a href="#avionics">Avionics</a></li>
+    <li><a href="#weapons">Weapons</a></li>
+    <li><a href="#history">History</a></li>
+    <li><button class="gesture-btn" id="gestureToggleBtn">Hand Gesture</button></li>
+  </ul>
+  <div class="nav-badge">IAF CLASSIFIED</div>
+</nav>
+
+<!-- Hero -->
+<section class="hero" id="home">
+  <div class="hero-bg-glow"></div>
+
+  <div class="holo-badge">
+    <span class="holo-dot"></span>
+    Indian Air Force · Sukhoi Design Bureau · Active Service
+  </div>
+
+  <div class="hero-eyebrow">Суперманёвренный истребитель</div>
+
+  <h1 class="hero-title">
+    <span class="line1">SUKHOI</span>
+    <span class="line1">Su-30 MKI</span>
+    <span class="line2">FLANKER · H</span>
+  </h1>
+  <p class="hero-subtitle">
+    India's apex air dominance platform — a supermanoeuvrable twin-engine multirole superiority fighter
+  </p>
+
+  <div class="jet-hero-container reveal">
+    <div class="jet-hud-left">
+      <div class="hud-item">ALT: 17,000M<br>FL: 558</div>
+      <div class="hud-item">HDG: 247°<br>PITCH: -2°</div>
+      <div class="hud-item">GS: 2.35M<br>TAS: 2447KT</div>
+    </div>
+    <img class="jet-hero-img"
+      src="https://res.cloudinary.com/ddfegc6go/image/upload/v1778939815/f3a54c45-9603-4efc-bfd6-8dbcc09e8ca8_removalai_preview_bjmccj.png"
+      alt="Su-30 MKI">
+    <div class="jet-hud-right">
+      <div class="hud-item">RADAR: BARS<br>MODE: TWS</div>
+      <div class="hud-item">WPN: R-77<br>ARMED: 8</div>
+      <div class="hud-item">FUEL: 92%<br>ENG: NOMINAL</div>
+    </div>
+  </div>
+
+  <div class="stats-bar reveal">
+    <div class="stat-item">
+      <span class="stat-value">2.35</span>
+      <span class="stat-unit">MACH</span>
+      <span class="stat-label">Top Speed</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value">3000</span>
+      <span class="stat-unit">KM</span>
+      <span class="stat-label">Combat Range</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value">17.5</span>
+      <span class="stat-unit">KM</span>
+      <span class="stat-label">Service Ceiling</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value">8000</span>
+      <span class="stat-unit">KG</span>
+      <span class="stat-label">Payload</span>
+    </div>
+  </div>
+
+  <div class="scroll-indicator">
+    <span>SCROLL</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<div class="glow-divider"></div>
+
+<!-- Specs -->
+<section id="specs">
+  <div class="section-header reveal">
+    <span class="section-num">01 //</span>
+    <h2 class="section-title">Technical Specifications</h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="specs-grid">
+    <div class="glass-card spec-card reveal" style="transition-delay:0.1s">
+      <div class="spec-icon">✈</div>
+      <div class="spec-name">Dimensions</div>
+      <div class="spec-value">21.9m × 14.7m</div>
+      <div class="spec-detail">Length 21.9m · Wingspan 14.7m · Height 6.36m · Wing Area 62 m²</div>
+    </div>
+    <div class="glass-card spec-card reveal" style="transition-delay:0.15s">
+      <div class="spec-icon">⚖</div>
+      <div class="spec-name">Weight</div>
+      <div class="spec-value">18,400 kg</div>
+      <div class="spec-detail">Empty Weight 18,400kg · Max Takeoff: 38,800kg · Fuel Capacity: 9,400kg</div>
+    </div>
+    <div class="glass-card spec-card reveal" style="transition-delay:0.2s">
+      <div class="spec-icon">🔥</div>
+      <div class="spec-name">Powerplant</div>
+      <div class="spec-value">2× AL-31FP</div>
+      <div class="spec-detail">Saturn AL-31FP with 3D Thrust Vector Control · 122.6 kN each with afterburner</div>
+    </div>
+    <div class="glass-card spec-card reveal" style="transition-delay:0.1s">
+      <div class="spec-icon">⚡</div>
+      <div class="spec-name">Performance</div>
+      <div class="spec-value">Mach 2.35</div>
+      <div class="spec-detail">Max Speed: 2,120 km/h · Cruise: 900 km/h · Rate of Climb: 230 m/s</div>
+    </div>
+    <div class="glass-card spec-card reveal" style="transition-delay:0.15s">
+      <div class="spec-icon">🎯</div>
+      <div class="spec-name">G-Force Limit</div>
+      <div class="spec-value">+9g / −3g</div>
+      <div class="spec-detail">Supermanoeuvrable · Post-stall manoeuvring · Pugachev Cobra capable</div>
+    </div>
+    <div class="glass-card spec-card reveal" style="transition-delay:0.2s">
+      <div class="spec-icon">🛡</div>
+      <div class="spec-name">Crew</div>
+      <div class="spec-value">2 Pilots</div>
+      <div class="spec-detail">Pilot + Weapons System Officer · Tandem seating with K-36DM ejection seats</div>
+    </div>
+  </div>
+</section>
+
+<!-- Gallery -->
+<section id="gallery" class="gallery-section">
+  <div class="section-header reveal">
+    <span class="section-num">02 //</span>
+    <h2 class="section-title">Visual Intelligence</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="gallery-showcase reveal">
+    <div class="g-item g-feature">
+      <img src="https://res.cloudinary.com/ddfegc6go/image/upload/v1778939774/0015cd55-666e-4333-b138-dcbca8ad2f8c_removalai_preview_pigot9.png" alt="Su-30 MKI Dorsal Profile">
+      <div class="g-corner"></div>
+      <div class="g-corner-r"></div>
+      <div class="g-badge">// FEATURED</div>
+      <div class="g-overlay">
+        <div class="g-tag">// DORSAL PROFILE</div>
+        <div class="g-label">Overhead Silhouette</div>
+      </div>
+    </div>
+    <div class="g-item g-wide">
+      <img src="https://res.cloudinary.com/ddfegc6go/image/upload/v1778939708/5349d4af-7078-4870-8d63-45ffee4a0462_removalai_preview_skif5x.png" alt="Su-30 MKI Combat Config">
+      <div class="g-corner"></div>
+      <div class="g-overlay">
+        <div class="g-tag">// COMBAT CONFIG</div>
+        <div class="g-label">Full Weapons Load</div>
+      </div>
+    </div>
+    <div class="g-item g-tall">
+      <img src="https://res.cloudinary.com/ddfegc6go/image/upload/v1778939835/df9a8342-5c6f-4ab1-b5a5-f81986d40148_removalai_preview_baothn.png" alt="Su-30 MKI Lateral">
+      <div class="g-overlay">
+        <div class="g-tag">// LATERAL VIEW</div>
+        <div class="g-label">Port Profile</div>
+      </div>
+    </div>
+    <div class="g-item g-tall">
+      <img src="https://res.cloudinary.com/ddfegc6go/image/upload/v1778939857/517d624b-ff40-494c-95de-8135e05ae3ea_removalai_preview_biwvcv.png" alt="Su-30 MKI Formation">
+      <div class="g-overlay">
+        <div class="g-tag">// IN FORMATION</div>
+        <div class="g-label">Squadron Flight</div>
+      </div>
+    </div>
+    <div class="g-item g-wide">
+      <img src="https://res.cloudinary.com/ddfegc6go/image/upload/v1778939935/1da7786b-04bb-4ef5-b667-6cb0ad65ea10_removalai_preview_c71tsd.png" alt="Su-30 MKI Weapons Load">
+      <div class="g-corner-r"></div>
+      <div class="g-overlay">
+        <div class="g-tag">// WEAPONS LOAD</div>
+        <div class="g-label">Armament Configuration</div>
+      </div>
+    </div>
+    <div class="g-item g-tall">
+      <img src="https://res.cloudinary.com/ddfegc6go/image/upload/v1778939982/577c91ad-b3d3-4bc2-8354-b4eeefe491db_removalai_preview_ecegwk.png" alt="Su-30 MKI Approach">
+      <div class="g-overlay">
+        <div class="g-tag">// APPROACH</div>
+        <div class="g-label">Landing Configuration</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Capabilities -->
+<section id="capabilities">
+  <div class="section-header reveal">
+    <span class="section-num">03 //</span>
+    <h2 class="section-title">Combat Capabilities</h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="capabilities-grid">
+    <div class="glass-card cap-card reveal">
+      <div class="cap-number">01</div>
+      <div class="cap-title">Air Superiority</div>
+      <div class="cap-desc">With thrust vector control engines and canard delta configuration, the Su-30 MKI achieves unparalleled agility. Post-stall manoeuvres like the Cobra and Chakra give it dominant close-combat edges.</div>
+      <div class="cap-tags">
+        <span class="cap-tag">BVR COMBAT</span><span class="cap-tag">WVR DOGFIGHT</span><span class="cap-tag">SUPERMANOEUVRE</span>
+      </div>
+    </div>
+    <div class="glass-card cap-card reveal" style="transition-delay:0.1s">
+      <div class="cap-number">02</div>
+      <div class="cap-title">Precision Strike</div>
+      <div class="cap-desc">Equipped with advanced targeting pods and a multi-mode radar, the MKI can deliver precision guided munitions in all weather, day or night, against ground and sea targets with surgical accuracy.</div>
+      <div class="cap-tags">
+        <span class="cap-tag">ALL-WEATHER</span><span class="cap-tag">NIGHT OPS</span><span class="cap-tag">LASER GUIDED</span>
+      </div>
+    </div>
+    <div class="glass-card cap-card reveal" style="transition-delay:0.05s">
+      <div class="cap-number">03</div>
+      <div class="cap-title">Maritime Strike</div>
+      <div class="cap-desc">Anti-ship capability with Brahmos supersonic cruise missile integration makes the MKI a formidable naval threat. Long-range radar enables over-the-horizon targeting of maritime assets.</div>
+      <div class="cap-tags">
+        <span class="cap-tag">ANTI-SHIP</span><span class="cap-tag">BRAHMOS</span><span class="cap-tag">MARITIME ISR</span>
+      </div>
+    </div>
+    <div class="glass-card cap-card reveal" style="transition-delay:0.15s">
+      <div class="cap-number">04</div>
+      <div class="cap-title">SEAD / EW</div>
+      <div class="cap-desc">The onboard Sorbtsiya ECM pod provides active jamming and self-protection. SEAD missions using ARMs can suppress enemy air defences to enable friendly strike packages in contested airspace.</div>
+      <div class="cap-tags">
+        <span class="cap-tag">ELECTRONIC WARFARE</span><span class="cap-tag">SEAD</span><span class="cap-tag">ACTIVE JAMMING</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Counters -->
+<section class="counter-section" id="service">
+  <div class="counter-grid">
+    <div class="counter-item reveal">
+      <span class="counter-num">272<span class="counter-suffix">+</span></span>
+      <div class="counter-label">Aircraft in IAF Service</div>
+    </div>
+    <div class="counter-item reveal" style="transition-delay:0.1s">
+      <span class="counter-num">12<span class="counter-suffix"></span></span>
+      <div class="counter-label">Hardpoints</div>
+    </div>
+    <div class="counter-item reveal" style="transition-delay:0.2s">
+      <span class="counter-num">3000<span class="counter-suffix">km</span></span>
+      <div class="counter-label">Combat Range</div>
+    </div>
+    <div class="counter-item reveal" style="transition-delay:0.3s">
+      <span class="counter-num">2002<span class="counter-suffix"></span></span>
+      <div class="counter-label">Year First Inducted</div>
+    </div>
+    <div class="counter-item reveal" style="transition-delay:0.4s">
+      <span class="counter-num">4.5<span class="counter-suffix">+</span></span>
+      <div class="counter-label">Generation Fighter</div>
+    </div>
+  </div>
+</section>
+
+<!-- Avionics -->
+<section id="avionics" class="avionics-section">
+  <div class="section-header reveal">
+    <span class="section-num">04 //</span>
+    <h2 class="section-title">Avionics Suite</h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="avionics-layout">
+    <div class="reveal">
+      <img class="avionics-jet"
+        src="https://res.cloudinary.com/ddfegc6go/image/upload/v1778940045/de42e96b-11c2-42a7-82b1-19f239d92d5f_removalai_preview_orzdtv.png"
+        alt="Su-30 MKI Side">
+      <div class="radar-container">
+        <div class="radar-circle"></div>
+        <div class="radar-circle"></div>
+        <div class="radar-circle"></div>
+        <div class="radar-line-h"></div>
+        <div class="radar-line-v"></div>
+        <div class="radar-sweep"></div>
+      </div>
+    </div>
+    <div>
+      <ul class="avionics-list reveal">
+        <li class="avionics-item">
+          <div class="avi-dot"></div>
+          <div class="avi-content">
+            <div class="avi-name">N011M BARS Radar</div>
+            <div class="avi-detail">Pulse-Doppler · Track 15 / Engage 4 · 400km range</div>
+          </div>
+          <span class="avi-status">ACTIVE</span>
+        </li>
+        <li class="avionics-item">
+          <div class="avi-dot"></div>
+          <div class="avi-content">
+            <div class="avi-name">OLS-30 IRST</div>
+            <div class="avi-detail">Infrared Search & Track · Passive target detection</div>
+          </div>
+          <span class="avi-status">ACTIVE</span>
+        </li>
+        <li class="avionics-item">
+          <div class="avi-dot"></div>
+          <div class="avi-content">
+            <div class="avi-name">Sorbtsiya ECM Pod</div>
+            <div class="avi-detail">Active jamming · Radar warning · Missile approach warning</div>
+          </div>
+          <span class="avi-status">ACTIVE</span>
+        </li>
+        <li class="avionics-item">
+          <div class="avi-dot"></div>
+          <div class="avi-content">
+            <div class="avi-name">Digital Fly-by-Wire</div>
+            <div class="avi-detail">Multi-channel FBW · Relaxed stability · Quadruplex</div>
+          </div>
+          <span class="avi-status">ACTIVE</span>
+        </li>
+        <li class="avionics-item">
+          <div class="avi-dot"></div>
+          <div class="avi-content">
+            <div class="avi-name">HOTAS Cockpit</div>
+            <div class="avi-detail">Multi-function displays · HUD · HMS Helmet system</div>
+          </div>
+          <span class="avi-status">ACTIVE</span>
+        </li>
+        <li class="avionics-item">
+          <div class="avi-dot"></div>
+          <div class="avi-content">
+            <div class="avi-name">Israel Avionics Suite</div>
+            <div class="avi-detail">LITENING pod · Elta EL/L-8222 ASPIS · El-Op HUD</div>
+          </div>
+          <span class="avi-status">ACTIVE</span>
+        </li>
+        <li class="avionics-item">
+          <div class="avi-dot"></div>
+          <div class="avi-content">
+            <div class="avi-name">IFR Probe</div>
+            <div class="avi-detail">In-flight refuelling · Extended combat range missions</div>
+          </div>
+          <span class="avi-status">ACTIVE</span>
+        </li>
+      </ul>
+      <div class="progress-list reveal">
+        <div class="progress-item">
+          <div class="progress-header"><span>RADAR RANGE</span><span>400KM</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:92%"></div></div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-header"><span>ELECTRONIC WARFARE</span><span>ADVANCED</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:85%"></div></div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-header"><span>MANEUVERABILITY</span><span>SUPERMANOUVERABLE</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:97%"></div></div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-header"><span>PAYLOAD CAPACITY</span><span>8,000 KG</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:88%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Weapons -->
+<section id="weapons">
+  <div class="section-header reveal">
+    <span class="section-num">05 //</span>
+    <h2 class="section-title">Weapons Systems</h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="weapons-grid">
+    <div class="glass-card weapon-card reveal">
+      <div class="weapon-class">AIR-TO-AIR</div>
+      <div class="weapon-name">R-77 / AA-12</div>
+      <div class="weapon-range">~80–175 km</div>
+      <div class="weapon-desc">Active radar-homing BVR missile. Grid-fin control surfaces for extreme agility.</div>
+    </div>
+    <div class="glass-card weapon-card reveal" style="transition-delay:0.1s">
+      <div class="weapon-class">AIR-TO-AIR</div>
+      <div class="weapon-name">R-73 / AA-11</div>
+      <div class="weapon-range">~30 km</div>
+      <div class="weapon-desc">Infrared-homing WVR dogfight missile. High off-boresight with helmet cueing.</div>
+    </div>
+    <div class="glass-card weapon-card reveal" style="transition-delay:0.2s">
+      <div class="weapon-class">CRUISE MISSILE</div>
+      <div class="weapon-name">BrahMos</div>
+      <div class="weapon-range">290–500 km</div>
+      <div class="weapon-desc">Supersonic cruise missile at Mach 2.8–3. World's fastest anti-ship missile.</div>
+    </div>
+    <div class="glass-card weapon-card reveal" style="transition-delay:0.3s">
+      <div class="weapon-class">AIR-TO-GROUND</div>
+      <div class="weapon-name">Kh-59MK</div>
+      <div class="weapon-range">285 km</div>
+      <div class="weapon-desc">Standoff precision cruise missile with TV/IR terminal guidance. Anti-ship capable.</div>
+    </div>
+    <div class="glass-card weapon-card reveal" style="transition-delay:0.05s">
+      <div class="weapon-class">GUIDED BOMB</div>
+      <div class="weapon-name">KAB-1500L</div>
+      <div class="weapon-range">Laser Guided</div>
+      <div class="weapon-desc">1,500kg laser-guided bomb. Bunker-busting capability against hardened targets.</div>
+    </div>
+    <div class="glass-card weapon-card reveal" style="transition-delay:0.15s">
+      <div class="weapon-class">ANTI-RADIATION</div>
+      <div class="weapon-name">Kh-31P</div>
+      <div class="weapon-range">~110 km</div>
+      <div class="weapon-desc">High-speed anti-radiation missile. SEAD operations against SAM radars.</div>
+    </div>
+    <div class="glass-card weapon-card reveal" style="transition-delay:0.25s">
+      <div class="weapon-class">GUN</div>
+      <div class="weapon-name">GSh-30-1</div>
+      <div class="weapon-range">1,500–2,000m</div>
+      <div class="weapon-desc">30mm autocannon · 150 rounds · 1800 rpm rate of fire for dogfight backup.</div>
+    </div>
+    <div class="glass-card weapon-card reveal" style="transition-delay:0.35s">
+      <div class="weapon-class">AIR-TO-AIR</div>
+      <div class="weapon-name">Astra Mk.1</div>
+      <div class="weapon-range">~80 km</div>
+      <div class="weapon-desc">India's indigenous BVR missile. DRDO developed with active radar seeker.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Cockpit -->
+<section id="cockpit" style="background: linear-gradient(135deg, rgba(0,20,60,0.3) 0%, transparent 100%);">
+  <div class="section-header reveal">
+    <span class="section-num">06 //</span>
+    <h2 class="section-title">Cockpit & Systems</h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="cockpit-section">
+    <div class="reveal">
+      <p style="color:rgba(232,244,255,0.6); line-height:1.8; font-size:0.95rem; margin-bottom:20px;">
+        The Su-30 MKI features a tandem two-seat cockpit with a pilot up front and a Weapons System Officer in the rear. Both stations are equipped with multi-function colour displays, hands-on-throttle-and-stick controls, and helmet-mounted sighting systems.
+      </p>
+      <ul class="cockpit-feature-list">
+        <li class="cockpit-feature">
+          <div class="cf-icon">◈</div>
+          <div>
+            <div class="cf-title">Multi-Function Displays</div>
+            <div class="cf-desc">Six colour MFDs across both cockpits for navigation, targeting, and systems management</div>
+          </div>
+        </li>
+        <li class="cockpit-feature">
+          <div class="cf-icon">◉</div>
+          <div>
+            <div class="cf-title">Helmet-Mounted Sight</div>
+            <div class="cf-desc">Allows off-boresight weapons cueing and targeting up to 90° off centreline</div>
+          </div>
+        </li>
+        <li class="cockpit-feature">
+          <div class="cf-icon">⊕</div>
+          <div>
+            <div class="cf-title">Head-Up Display</div>
+            <div class="cf-desc">Wide-angle HUD with forward-looking IR integration for all-weather operations</div>
+          </div>
+        </li>
+        <li class="cockpit-feature">
+          <div class="cf-icon">▲</div>
+          <div>
+            <div class="cf-title">HOTAS Controls</div>
+            <div class="cf-desc">Hands-on-throttle-and-stick for full weapons and avionics management without looking away</div>
+          </div>
+        </li>
+        <li class="cockpit-feature">
+          <div class="cf-icon">⬡</div>
+          <div>
+            <div class="cf-title">K-36DM Ejection Seats</div>
+            <div class="cf-desc">Zero-zero capability ejection seats for pilot safety across all flight regimes</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div class="cockpit-visual reveal">
+      <img src="https://res.cloudinary.com/ddfegc6go/image/upload/v1778939708/5349d4af-7078-4870-8d63-45ffee4a0462_removalai_preview_skif5x.png"
+        alt="Su-30 MKI"
+        style="width:100%; object-fit:contain; filter:drop-shadow(0 0 40px rgba(0,150,255,0.4)); border-radius:4px;">
+      <div style="width:100%">
+        <div class="glass-card" style="padding:20px;">
+          <div style="font-family:'Share Tech Mono',monospace; font-size:0.6rem; color:var(--cyan); letter-spacing:0.2em; margin-bottom:14px;">// SYSTEM STATUS</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div style="font-size:0.75rem; color:rgba(232,244,255,0.5);">Engine 1 <span style="color:var(--green); float:right;">NOMINAL</span></div>
+            <div style="font-size:0.75rem; color:rgba(232,244,255,0.5);">Engine 2 <span style="color:var(--green); float:right;">NOMINAL</span></div>
+            <div style="font-size:0.75rem; color:rgba(232,244,255,0.5);">Radar <span style="color:var(--green); float:right;">ACTIVE</span></div>
+            <div style="font-size:0.75rem; color:rgba(232,244,255,0.5);">ECM <span style="color:var(--gold); float:right;">STANDBY</span></div>
+            <div style="font-size:0.75rem; color:rgba(232,244,255,0.5);">IFF <span style="color:var(--green); float:right;">SQUAWK</span></div>
+            <div style="font-size:0.75rem; color:rgba(232,244,255,0.5);">FBW <span style="color:var(--green); float:right;">ONLINE</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Service history -->
+<section id="history">
+  <div class="section-header reveal">
+    <span class="section-num">07 //</span>
+    <h2 class="section-title">Service History</h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="timeline">
+    <div class="glass-card timeline-item reveal">
+      <div class="corner-deco tl"></div>
+      <div class="timeline-year">// 1994</div>
+      <div class="timeline-event">Contract Signed</div>
+      <div class="timeline-detail">India and Russia signed the first agreement for the Su-30 — a twin-seat version of the Su-27. The deal would evolve into one of the most comprehensive military technology transfers in history.</div>
+    </div>
+    <div class="glass-card timeline-item reveal" style="transition-delay:0.1s">
+      <div class="timeline-year">// 1997</div>
+      <div class="timeline-event">MKI Prototype First Flight</div>
+      <div class="timeline-detail">The Su-30MKI prototype took to the skies with its canards, thrust-vectoring engines and advanced avionics suite — a configuration uniquely tailored for Indian Air Force requirements.</div>
+    </div>
+    <div class="glass-card timeline-item reveal" style="transition-delay:0.2s">
+      <div class="timeline-year">// 2002</div>
+      <div class="timeline-event">IAF Induction Begins</div>
+      <div class="timeline-detail">The Indian Air Force formally inducted its first fully-configured Su-30MKIs at Lohegaon Air Base, Pune, marking a generational leap in India's air power projection capability.</div>
+    </div>
+    <div class="glass-card timeline-item reveal" style="transition-delay:0.1s">
+      <div class="timeline-year">// 2004</div>
+      <div class="timeline-event">HAL Licensed Production</div>
+      <div class="timeline-detail">Hindustan Aeronautics Limited began licensed manufacture at Nasik, enabling India to produce Su-30MKIs domestically with increasing levels of indigenous content.</div>
+    </div>
+    <div class="glass-card timeline-item reveal" style="transition-delay:0.2s">
+      <div class="timeline-year">// 2019</div>
+      <div class="timeline-event">BrahMos Integration</div>
+      <div class="timeline-detail">The Su-30MKI was successfully integrated with the BrahMos supersonic cruise missile, making it the world's only supersonic cruise missile-armed fighter aircraft of its class.</div>
+    </div>
+    <div class="glass-card timeline-item reveal" style="transition-delay:0.3s">
+      <div class="timeline-year">// 2024–PRESENT</div>
+      <div class="timeline-event">Super Sukhoi Upgrade Programme</div>
+      <div class="timeline-detail">India launched the ambitious 'Super Sukhoi' programme to modernise the existing fleet with AESA radar, electronic warfare suites, indigenous weapons, and upgraded avionics — extending operational life to 2040+.</div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-divider"></div>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-logo">SU-30 MKI</div>
+  <ul class="footer-links">
+    <li><a href="#home">Home</a></li>
+    <li><a href="#specs">Specifications</a></li>
+    <li><a href="#gallery">Gallery</a></li>
+    <li><a href="#weapons">Weapons</a></li>
+    <li><a href="#history">History</a></li>
+  </ul>
+  <p class="footer-text">
+    SUKHOI Su-30MKI · INDIAN AIR FORCE · FLANKER-H<br>
+    <span style="font-family:'Share Tech Mono',monospace; font-size:0.6rem; color:rgba(0,212,255,0.3);">
+      // FOR INFORMATIONAL AND EDUCATIONAL USE ONLY · NOT AN OFFICIAL IAF PUBLICATION
+    </span>
+  </p>
+  <div class="dev-credit">
+    Developed by <a href="https://github.com/sha14kh" target="_blank" rel="noopener noreferrer">https://github.com/sha14kh</a>
+  </div>
+</footer>
+
+</div>
+
+<!-- MediaPipe (hand tracking) -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+<script>
+// Fade sections in as they scroll into view
+const reveals = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+reveals.forEach(el => revealObserver.observe(el));
+
+// Count the numbers up once the counter section is visible
+function animateCounters() {
+  document.querySelectorAll('.counter-num').forEach(el => {
+    const text = el.textContent;
+    const target = parseFloat(text.replace(/[^0-9.]/g, ''));
+    if (isNaN(target)) return;
+
+    const suffix = text.replace(/[0-9.]/g, '');
+    const duration = 2000;
+    const startTime = performance.now();
+
+    function tick(now) {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const value = target * eased;
+      el.textContent = (Number.isInteger(target) ? Math.floor(value) : value.toFixed(1)) + suffix;
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+const counterObserver = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) {
+    animateCounters();
+    counterObserver.disconnect();
+  }
+}, { threshold: 0.4 });
+const counterSection = document.querySelector('.counter-section');
+if (counterSection) counterObserver.observe(counterSection);
+
+// Slight tilt on the hero jet that follows the mouse (devices with hover only)
+if (window.matchMedia('(hover: hover)').matches) {
+  document.addEventListener('mousemove', e => {
+    const xFrac = (e.clientX / window.innerWidth - 0.5) * 2;
+    const yFrac = (e.clientY / window.innerHeight - 0.5) * 2;
+    const jet = document.querySelector('.jet-hero-img');
+    if (jet) jet.style.transform = `translateY(${-yFrac * 10}px) rotate(${-2 + xFrac * 2}deg)`;
+  });
+}
+
+// Smooth scrolling for in-page links
+document.querySelectorAll('a[href^="#"]').forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(link.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+// Hand gesture scrolling (starts only when the nav button is clicked)
+const videoEl = document.getElementById('gesture-video');
+const toggleBtn = document.getElementById('gestureToggleBtn');
+
+let currentGesture = 'NONE';
+let scrollInterval = null;
+let handsModel = null;
+let cameraInstance = null;
+let isGestureActive = false;
+
+const SCROLL_SPEED = 14;
+
+toggleBtn.addEventListener('click', () => {
+  if (!isGestureActive) {
+    initGestureControl();
+  } else {
+    stopGestureControl();
+  }
+});
+
+async function initGestureControl() {
+  try {
+    if (typeof Hands === 'undefined') {
+      console.log('MediaPipe not available');
+      return;
+    }
+
+    toggleBtn.textContent = "Connecting...";
+
+    handsModel = new Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+
+    handsModel.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 0,
+      minDetectionConfidence: 0.6,
+      minTrackingConfidence: 0.5
+    });
+
+    handsModel.onResults(onHandResults);
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 320, height: 240, facingMode: 'user' }
+    });
+
+    videoEl.srcObject = stream;
+    await videoEl.play();
+
+    if (typeof Camera !== 'undefined') {
+      cameraInstance = new Camera(videoEl, {
+        onFrame: async () => {
+          if (isGestureActive && handsModel && videoEl.readyState >= 2) {
+            await handsModel.send({ image: videoEl });
+          }
+        },
+        width: 320,
+        height: 240
+      });
+      cameraInstance.start();
+    } else {
+      // Fallback if the Camera helper didn't load: feed frames manually
+      const sendFrame = async () => {
+        if (isGestureActive && handsModel && videoEl.readyState >= 2) {
+          await handsModel.send({ image: videoEl });
+        }
+        if (isGestureActive) requestAnimationFrame(sendFrame);
+      };
+      requestAnimationFrame(sendFrame);
+    }
+
+    scrollInterval = setInterval(applyScroll, 50);
+    isGestureActive = true;
+    toggleBtn.classList.add('active');
+    toggleBtn.textContent = "Gesture Active";
+
+  } catch (err) {
+    console.log('Gesture control unavailable:', err.message);
+    toggleBtn.textContent = "Error Camera";
+    setTimeout(() => { toggleBtn.textContent = "Hand Gesture"; }, 2000);
+  }
+}
+
+function stopGestureControl() {
+  isGestureActive = false;
+  currentGesture = 'NONE';
+
+  if (scrollInterval) clearInterval(scrollInterval);
+
+  if (videoEl.srcObject) {
+    videoEl.srcObject.getTracks().forEach(track => track.stop());
+    videoEl.srcObject = null;
+  }
+
+  toggleBtn.classList.remove('active');
+  toggleBtn.textContent = "Hand Gesture";
+}
+
+// MediaPipe's y axis runs top to bottom (0 = top of frame, 1 = bottom).
+// If the fingertips sit above the wrist (smaller y), the hand is pointing up,
+// so wrist.y minus the average fingertip y comes out positive.
+function onHandResults(results) {
+  if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+    currentGesture = 'NONE';
+    return;
+  }
+
+  const landmarks = results.multiHandLandmarks[0];
+  const fingertipIndices = [4, 8, 12, 16, 20];
+  const wrist = landmarks[0];
+
+  const avgTipY = fingertipIndices.reduce((sum, i) => sum + landmarks[i].y, 0) / fingertipIndices.length;
+  const diff = wrist.y - avgTipY;
+  const THRESHOLD = 0.08;
+
+  if (diff > THRESHOLD) {
+    currentGesture = 'UP';
+  } else if (diff < -THRESHOLD) {
+    currentGesture = 'DOWN';
+  } else {
+    currentGesture = 'NONE';
+  }
+}
+
+function applyScroll() {
+  if (currentGesture === 'UP') {
+    window.scrollBy({ top: -SCROLL_SPEED, behavior: 'auto' });
+  } else if (currentGesture === 'DOWN') {
+    window.scrollBy({ top: SCROLL_SPEED, behavior: 'auto' });
+  }
+}
+</script>
+</body>
+</html>
